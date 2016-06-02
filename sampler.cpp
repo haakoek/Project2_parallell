@@ -1,4 +1,3 @@
-#include <iostream>
 #include <cmath>
 #include <vector>
 #include "sampler.h"
@@ -9,6 +8,12 @@
 #include <iostream>
 #include <fstream>
 #include <mpi/mpi.h>
+#include <string>
+#include <cstdarg>
+#include <iomanip>
+#include <stdio.h>
+#include <stdlib.h>
+
 using namespace std;
 
 Sampler::Sampler(System* system, bool writeToFile) {
@@ -46,8 +51,16 @@ void Sampler::sample(bool acceptedStep) {
         m_meanKineticEnergy = 0.0;
         m_meanPotentialEnergy = 0.0;
         m_meanDistance = 0.0;
-        m_outfile.open(("energies.txt"));
-        m_positionsfile.open("positions.txt");
+
+        char filename1[50];
+        char filename2[50];
+        int n1,n2;
+
+        n1 = sprintf(filename1,"energies%d_N=%d_w=%g.txt",m_system->getRank()+1,m_system->getNumberOfParticles(),m_system->getWaveFunction()->getParameters()[0]);
+        n2 = sprintf(filename2,"positions%d_N=%d_w=%g.txt",m_system->getRank()+1,m_system->getNumberOfParticles(),m_system->getWaveFunction()->getParameters()[0]);
+
+        m_outfile.open(filename1);
+        m_positionsfile.open(filename2);
     }
 
     /* Here you should sample all the interesting things you want to measure.
@@ -80,6 +93,7 @@ void Sampler::sample(bool acceptedStep) {
     m_dE2beta  += dpsi_dbeta;
 
     if(m_writeToFile) {
+
         m_outfile << localEnergy << endl;
 
         //Write positions to file in order to compute one-body density.

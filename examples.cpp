@@ -28,8 +28,8 @@ int Examples::TwoParticles(int argc, char* argv[]) {
 
     int numberOfDimensions = 2;
     int numberOfParticles  = 2;
-    int numberOfSteps = (int) 1e6;
-    double omega = 1.0;
+    int numberOfSteps = (int) 1000;
+    double omega = 0.01;
     double alpha            = 0.997618;          // variational parameter 1
     double beta             = 0.412975;        // variational parameter 2
     double stepLength = 1.7;
@@ -39,7 +39,7 @@ int Examples::TwoParticles(int argc, char* argv[]) {
     bool interaction  = true;
     bool with_jastrow = true;
     bool imp_sampling = true;
-    bool writeToFile  = false;
+    bool writeToFile  = true;
 
     System* system =                     new System(imp_sampling, with_jastrow,writeToFile);
     system->setRank(rank);
