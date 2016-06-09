@@ -4,8 +4,8 @@ class Examples
 {
 public:
   static int TwoParticles(int argc, char *argv[]);
-  static int SixParticles();
-  static int TwelveParticles();
-  static int TwentyParticles();
+  static int SixParticles(int argc, char* argv[]);
+  static int TwelveParticles(int argc, char* argv[]);
+  static int TwentyParticles(int argc, char* argv[]);
 };
 

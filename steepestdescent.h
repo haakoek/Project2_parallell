@@ -5,7 +5,7 @@ public:
     SteepestDescent(class System* system, int nSteps, int n_particles, int n_dim);
     double getOptAlpha();
     double getOptBeta();
-    void optimize(std::vector<double> parameters);
+    void optimize(double alpha);
     void altOptimize(std::vector<double> parameters);
     int getNrOfIters();
 private:

@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <sampler.h>
 
 class System {
 public:
@@ -33,6 +34,7 @@ public:
     void printToTerminal();
     void printParticlePositions();
     void setWriteToFile(bool writeToFile);
+    bool getJastrow() {return m_with_jastrow;}
     double getEnergy();
     void setRank(int rank) {m_rank = rank;}
     void setSize(int size) {m_size = size;}

@@ -298,8 +298,13 @@ std::vector<double> SlaterWaveFunction::computeGradientImportance(int i) {
     std::vector<double> gradSlater =  computeGradient(i);
     std::vector<double> gradJastrow = gradientJastrow(i);
 
-    gradient[0] = (gradSlater[0] + gradJastrow[0])/m_Ratio; //gradSlater[0]/m_Ratio;
-    gradient[1] = (gradSlater[1] + gradJastrow[1])/m_Ratio; //gradSlater[1]/m_Ratio;
+    if(m_system->getJastrow()) {
+        gradient[0] = (gradSlater[0] + gradJastrow[0])/m_Ratio;
+        gradient[1] = (gradSlater[1] + gradJastrow[1])/m_Ratio;
+    } else {
+        gradient[0] = gradSlater[0]/m_Ratio;
+        gradient[1] = gradSlater[1]/m_Ratio;
+    }
 
     return gradient;
 }

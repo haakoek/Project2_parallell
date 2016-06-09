@@ -56,11 +56,19 @@ void Sampler::sample(bool acceptedStep) {
         char filename2[50];
         int n1,n2;
 
-        n1 = sprintf(filename1,"energies%d_N=%d_w=%g.txt",m_system->getRank()+1,m_system->getNumberOfParticles(),m_system->getWaveFunction()->getParameters()[0]);
-        n2 = sprintf(filename2,"positions%d_N=%d_w=%g.txt",m_system->getRank()+1,m_system->getNumberOfParticles(),m_system->getWaveFunction()->getParameters()[0]);
+        if(m_system->getJastrow()) {
+            n1 = sprintf(filename1,"energies%d_N=%d_w=%g_WithJastrow.txt",m_system->getRank()+1,m_system->getNumberOfParticles(),m_system->getWaveFunction()->getParameters()[0]);
+            n2 = sprintf(filename2,"positions%d_N=%d_w=%g_WithJastrow.txt",m_system->getRank()+1,m_system->getNumberOfParticles(),m_system->getWaveFunction()->getParameters()[0]);
+        } else {
+            n1 = sprintf(filename1,"energies%d_N=%d_w=%g.txt",m_system->getRank()+1,m_system->getNumberOfParticles(),m_system->getWaveFunction()->getParameters()[0]);
+            n2 = sprintf(filename2,"positions%d_N=%d_w=%g.txt",m_system->getRank()+1,m_system->getNumberOfParticles(),m_system->getWaveFunction()->getParameters()[0]);
+        }
 
-        m_outfile.open(filename1);
-        m_positionsfile.open(filename2);
+        if(m_writeToFile) {
+            m_outfile.open(filename1);
+            m_positionsfile.open(filename2);
+        }
+
     }
 
     /* Here you should sample all the interesting things you want to measure.
@@ -113,8 +121,10 @@ void Sampler::sample(bool acceptedStep) {
     //
     if (m_stepNumber == m_system->getNumberOfMetropolisSteps()) {
         //Close open files.
-        m_positionsfile.close();
-        m_outfile.close();
+        if(m_writeToFile) {
+            m_positionsfile.close();
+            m_outfile.close();
+        }
     }
 
 
@@ -153,7 +163,7 @@ void Sampler::printOutputToTerminal() {
         cout << " <E^2>           : " << m_E2 << endl;
         cout << " Variance        : " << m_variance << endl;
         cout << " Std             : " << sqrt(m_variance) << endl;
-        cout << " Acceptance rate : " << (double)m_accepted/(double)((1-m_system->getEquilibrationFraction())*m_numberOfMetropolisSteps) << endl;
+        cout << " Acceptance rate : " << m_acceptanceRate << endl;
         cout << " dE/dalpha       : " << m_dEdalpha << endl;
         cout << " dE/dbeta        : " << m_dEbeta   << endl;
         cout << " <r12>           : " << m_meanDistance << endl;
@@ -174,6 +184,7 @@ void Sampler::computeAverages() {
     m_meanDistance = m_meanDistance/(double)m_stepNumber;
     m_meanKineticEnergy = m_meanKineticEnergy/(double)m_stepNumber;
     m_meanPotentialEnergy = m_meanPotentialEnergy/(double)m_stepNumber;
+    m_acceptanceRate  = (double)m_accepted/(double)((1-m_system->getEquilibrationFraction())*m_numberOfMetropolisSteps);
 
     //Parallell communication
 
@@ -193,6 +204,29 @@ void Sampler::computeAverages() {
         m_meanPotentialEnergy = reducedPotential/(double)m_system->getSize();
         m_variance            = (reducedE2/(double)m_system->getSize() - m_energy*m_energy)/((double)m_stepNumber*m_system->getSize());
     }
+
+}
+
+void Sampler::reset() {
+
+    m_cumulativeEnergy = 0.0;
+    m_accepted = 0;
+    m_E2 = 0.0;
+
+    m_dEdalpha = 0.0;
+    m_dE1alpha = 0.0;
+    m_dE2alpha = 0.0;
+
+    m_dEbeta   = 0.0;
+    m_dE1beta  = 0.0;
+    m_dE2beta  = 0.0;
+
+    m_variance = 0.0;
+    m_meanKineticEnergy = 0.0;
+    m_meanPotentialEnergy = 0.0;
+    m_meanDistance = 0.0;
+
+    m_stepNumber = 0;
 
 }
 

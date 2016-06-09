@@ -16,6 +16,7 @@
 #include <SingleParticleWaveFunctions/singleparticleharmonicoscillator.h>
 #include <SingleParticleWaveFunctions/singleparticlewavefunctions.h>
 #include "Hamiltonians/simplequantumdothamiltonian.h"
+#include <cstdlib>
 
 using namespace std;
 
@@ -28,23 +29,38 @@ int Examples::TwoParticles(int argc, char* argv[]) {
 
     int numberOfDimensions = 2;
     int numberOfParticles  = 2;
-    int numberOfSteps = (int) 1000;
-    double omega = 0.01;
-    double alpha            = 0.997618;          // variational parameter 1
-    double beta             = 0.412975;        // variational parameter 2
+    int numberOfSteps = (int) 1e7;
     double stepLength = 1.7;
-    double timeStep   = 0.001;
+    double timeStep = 0.0001;
     double equilibration = 0.1;
 
     bool interaction  = true;
-    bool with_jastrow = true;
     bool imp_sampling = true;
-    bool writeToFile  = true;
+    bool optimize     = false;
+    bool writeToFile  = false;
 
-    System* system =                     new System(imp_sampling, with_jastrow,writeToFile);
+    double omega, alpha, beta;
+    int int_jastrow;
+    bool jastrow;
+
+    if(argc > 1) {
+        omega = atof(argv[1]);
+        alpha = atof(argv[2]);
+        beta  = atof(argv[3]);
+        int_jastrow = atoi(argv[4]);
+
+        if(int_jastrow == 1) {
+            jastrow = true;
+        } else {
+            jastrow = false;
+        }
+
+    }
+
+    System* system =                     new System(imp_sampling, jastrow,writeToFile);
     system->setRank(rank);
     system->setSize(size);
-    system->setHamiltonian(new SimpleQuantumDotHamiltonian(system,with_jastrow,interaction));
+    system->setHamiltonian(new SimpleQuantumDotHamiltonian(system,jastrow,interaction));
 
     system->setInitialState             (new RandomUniform(system, numberOfDimensions, numberOfParticles));
     WaveFunction* wf = new SlaterWaveFunction(system,omega,alpha,beta,new SingleParticleHarmonicOscillator(omega,alpha));
@@ -54,38 +70,40 @@ int Examples::TwoParticles(int argc, char* argv[]) {
     system->setStepLength(stepLength);
     system->setTimeStepImportanceSampling(timeStep);
 
-    /*
-    std::vector<double> parameters(2);
-    parameters[0] = alpha;
-    parameters[1] = beta;
-    SteepestDescent* sd = new SteepestDescent(system,1e5,numberOfParticles,numberOfDimensions);
+    if(optimize) {
 
-    //sd->optimize(parameters);
-    sd->altOptimize(parameters);
+        SteepestDescent* sd = new SteepestDescent(system,1e6,numberOfParticles,numberOfDimensions);
 
-    system->setAlpha(sd->getOptAlpha());
-    system->setBeta(sd->getOptBeta());
+        if(jastrow) {
+            std::vector<double> parameters(2);
+            parameters[0] = alpha;
+            parameters[1] = beta;
+            sd->altOptimize(parameters);
+        } else {
+            sd->optimize(alpha);
+        }
+
+    } else {
 
 
-    system->setWriteToFile(true);
-    */
+        clock_t begin = clock();
 
-    clock_t begin = clock();
+        system->runMetropolisSteps(numberOfSteps);
 
-    system->runMetropolisSteps(numberOfSteps);
+        clock_t end   = clock();
 
-    clock_t end   = clock();
+        system->printToTerminal();
 
-    system->printToTerminal();
+        cout << "Execution time: " << double (end - begin) / CLOCKS_PER_SEC << " seconds" << endl;
+    }
 
     MPI_Finalize();
-    cout << "Execution time: " << double (end - begin) / CLOCKS_PER_SEC << " seconds" << endl;
 
     return 0;
 
 }
 
-int Examples::SixParticles() {
+int Examples::SixParticles(int argc, char* argv[]) {
 
     int numberOfDimensions = 2;
     int numberOfParticles  = 6;
@@ -136,7 +154,7 @@ int Examples::SixParticles() {
 
 }
 
-int Examples::TwelveParticles() {
+int Examples::TwelveParticles(int argc, char* argv[]) {
 
 
     int numberOfDimensions = 2;
@@ -190,7 +208,7 @@ int Examples::TwelveParticles() {
 
 }
 
-int Examples::TwentyParticles() {
+int Examples::TwentyParticles(int argc, char *argv[]) {
 
     int numberOfDimensions = 2;
     int numberOfParticles  = 20;
