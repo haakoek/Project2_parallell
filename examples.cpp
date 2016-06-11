@@ -27,6 +27,9 @@ int Examples::TwoParticles(int argc, char* argv[]) {
     MPI_Comm_rank (MPI_COMM_WORLD, &rank);	/* get current process id */
     MPI_Comm_size (MPI_COMM_WORLD, &size);	/* get number of processes */
 
+    Random::setSeed((long) -rank*10);
+    cout << "rank;: " << rank << ", seed:" << Random::getSeed() << " first=" << Random::nextDouble() << endl;
+
     int numberOfDimensions = 2;
     int numberOfParticles  = 2;
     int numberOfSteps = (int) 1e7;
@@ -37,7 +40,7 @@ int Examples::TwoParticles(int argc, char* argv[]) {
     bool interaction  = true;
     bool imp_sampling = true;
     bool optimize     = false;
-    bool writeToFile  = false;
+    bool writeToFile  = true;
 
     double omega, alpha, beta;
     int int_jastrow;

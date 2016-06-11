@@ -36,7 +36,7 @@ private:
     double  m_dEbeta   = 0.0;
     double  m_dE1beta  = 0.0;
     double  m_dE2beta  = 0.0;
-
+    double m_probR[600];
     bool m_writeToFile = false;
 
     double m_meanKineticEnergy = 0.0;
@@ -46,4 +46,5 @@ private:
     class System* m_system = nullptr;
     ofstream m_outfile;
     ofstream m_positionsfile;
+    ofstream m_averages;
 };

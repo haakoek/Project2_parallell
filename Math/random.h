@@ -33,5 +33,6 @@ public:
     static double nextDouble();
     static double nextGaussian(double mean, double standardDeviation);
     static void setSeed(long seed);
+    static long getSeed() { return seed; }
 };
 

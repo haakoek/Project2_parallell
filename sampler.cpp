@@ -52,6 +52,10 @@ void Sampler::sample(bool acceptedStep) {
         m_meanPotentialEnergy = 0.0;
         m_meanDistance = 0.0;
 
+        for(int i = 0; i < 600; i++) {
+            m_probR[i] = 0.0;
+        }
+
         char filename1[50];
         char filename2[50];
         int n1,n2;
@@ -106,25 +110,44 @@ void Sampler::sample(bool acceptedStep) {
 
         //Write positions to file in order to compute one-body density.
         for(int p = 0; p < m_system->getNumberOfParticles(); p++) {
+
             double r = 0.0;
+
             for(int d = 0; d < m_system->getNumberOfDimensions(); d++) {
                 double xk = m_system->getParticles()[p]->getPosition()[d];
                 r+= xk*xk;
             }
 
-            m_positionsfile << sqrt(r) << endl;
+            r = sqrt(r);
+
+            double dr = 0;
+            double step = 0.1;
+
+            for(int i = 0; i < 600; i++) {
+                if( r >= dr && r < dr+step ) {
+                    m_probR[i] += 1;
+                    break;
+                } else {
+                    dr += step;
+                }
+            }
         }
+
     }
 
 
 
-    //
-    if (m_stepNumber == m_system->getNumberOfMetropolisSteps()) {
+    if (m_stepNumber == (1-m_system->getEquilibrationFraction())*m_system->getNumberOfMetropolisSteps()) {
+
         //Close open files.
-        if(m_writeToFile) {
-            m_positionsfile.close();
-            m_outfile.close();
+        cout << "Process: " << m_system->getRank()+1 << endl;
+
+        for(int i = 0; i < 600; i++) {
+            m_positionsfile << m_probR[i] << endl;
         }
+
+        m_positionsfile.close();
+        m_outfile.close();
     }
 
 
@@ -137,6 +160,17 @@ void Sampler::sample(bool acceptedStep) {
 void Sampler::printOutputToTerminal() {
 
     if(m_system->getRank() == 0) {
+
+        char filename3[50];
+        int n1;
+
+        if(m_system->getJastrow()) {
+            n1 = sprintf(filename3,"Averages_N=%d_w=%g_WithJastrow.txt",m_system->getNumberOfParticles(),m_system->getWaveFunction()->getParameters()[0]);
+        } else {
+            n1 = sprintf(filename3,"Averages_N=%d_w=%g.txt",m_system->getNumberOfParticles(),m_system->getWaveFunction()->getParameters()[0]);
+        }
+
+        m_averages.open(filename3);
 
         int     np = m_system->getNumberOfParticles();
         int     nd = m_system->getNumberOfDimensions();
@@ -154,22 +188,58 @@ void Sampler::printOutputToTerminal() {
         cout << endl;
         cout << "  -- Wave function parameters -- " << endl;
         cout << " Number of parameters : " << p << endl;
+
+        m_averages << "  -- System info -- " << endl;
+        m_averages << " Number of particles  : " << np << endl;
+        m_averages << " Number of dimensions : " << nd << endl;
+        m_averages << " Number of Metropolis steps run : 10^" << std::log10(ms) << endl;
+        m_averages << " Number of equilibration steps  : 10^" << std::log10(std::round(ms*ef)) << endl;
+        m_averages << endl;
+        m_averages << "  -- Wave function parameters -- " << endl;
+        m_averages << " Number of parameters : " << p << endl;
+
+
         for (int i=0; i < p; i++) {
             cout << " Parameter " << i+1 << " : " << pa.at(i) << endl;
+            m_averages << " Parameter " << i+1 << " : " << pa.at(i) << endl;
         }
         cout << endl;
+
+        m_averages << " Number of processors: " << m_system->getSize() << endl;
+
         cout << "  -- Results -- " << endl;
-        cout << " Energy          : " << m_energy << endl;
-        cout << " <E^2>           : " << m_E2 << endl;
-        cout << " Variance        : " << m_variance << endl;
-        cout << " Std             : " << sqrt(m_variance) << endl;
-        cout << " Acceptance rate : " << m_acceptanceRate << endl;
+        m_averages << "  -- Results -- " << endl;
+
+        cout << "Energy: " << m_energy << endl;
+        m_averages <<"Energy: " << m_energy << endl;
+
+        cout << "<E^2>: " << m_E2 << endl;
+        m_averages << "<E^2>: " << m_E2 << endl;
+
+        cout << "Variance: " << m_variance << endl;
+        m_averages << "Variance: " << m_variance << endl;
+
+        cout << "Std: " << sqrt(m_variance) << endl;
+        m_averages << "Std: " << sqrt(m_variance) << endl;
+
+        cout << "Acceptance rate: " << m_acceptanceRate << endl;
+        m_averages << "Acceptance rate: " << m_acceptanceRate << endl;
+
         cout << " dE/dalpha       : " << m_dEdalpha << endl;
         cout << " dE/dbeta        : " << m_dEbeta   << endl;
-        cout << " <r12>           : " << m_meanDistance << endl;
-        cout << " <K>             : " << m_meanKineticEnergy << endl;
-        cout << " <V>             : " << m_meanPotentialEnergy;
+
+        cout << "<r12>: " << m_meanDistance << endl;
+        m_averages << "<r12>: " << m_meanDistance << endl;
+
+        cout << "<K>: " << m_meanKineticEnergy << endl;
+        m_averages << "<K>: " << m_meanKineticEnergy << endl;
+
+        cout << "<V>: " << m_meanPotentialEnergy;
+        m_averages << "<V>: " << m_meanPotentialEnergy;
+
         cout << endl;
+
+        m_averages.close();
 
     }
 }
