@@ -36,7 +36,8 @@ private:
     double  m_dEbeta   = 0.0;
     double  m_dE1beta  = 0.0;
     double  m_dE2beta  = 0.0;
-    double m_probR[600];
+    double m_probR[1000];
+    int m_SIZER = 1000;
     bool m_writeToFile = false;
 
     double m_meanKineticEnergy = 0.0;

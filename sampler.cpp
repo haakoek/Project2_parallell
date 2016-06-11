@@ -52,7 +52,7 @@ void Sampler::sample(bool acceptedStep) {
         m_meanPotentialEnergy = 0.0;
         m_meanDistance = 0.0;
 
-        for(int i = 0; i < 600; i++) {
+        for(int i = 0; i < m_SIZER; i++) {
             m_probR[i] = 0.0;
         }
 
@@ -123,7 +123,7 @@ void Sampler::sample(bool acceptedStep) {
             double dr = 0;
             double step = 0.1;
 
-            for(int i = 0; i < 600; i++) {
+            for(int i = 0; i < m_SIZER; i++) {
                 if( r >= dr && r < dr+step ) {
                     m_probR[i] += 1;
                     break;
@@ -142,7 +142,7 @@ void Sampler::sample(bool acceptedStep) {
         //Close open files.
         cout << "Process: " << m_system->getRank()+1 << endl;
 
-        for(int i = 0; i < 600; i++) {
+        for(int i = 0; i < m_SIZER; i++) {
             m_positionsfile << m_probR[i] << endl;
         }
 
